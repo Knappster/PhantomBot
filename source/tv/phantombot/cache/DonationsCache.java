@@ -1,24 +1,24 @@
 /* astyle --style=java --indent=spaces=4 --mode=java */
 
- /*
- * Copyright (C) 2016-2023 phantombot.github.io/PhantomBot
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+/*
+* Copyright (C) 2016-2023 phantombot.github.io/PhantomBot
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package tv.phantombot.cache;
 
-import com.illusionaryone.TwitchAlertsAPIv1;
+import com.knappster.StreamLabsAPIv2;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.json.JSONArray;
@@ -71,7 +71,8 @@ public class DonationsCache implements Runnable {
         try {
             Thread.sleep(20 * 1000);
         } catch (InterruptedException ex) {
-            com.gmt2001.Console.debug.println("DonationsCache.run: Failed to execute initial sleep [InterruptedException]: " + ex.getMessage());
+            com.gmt2001.Console.debug.println(
+                    "DonationsCache.run: Failed to execute initial sleep [InterruptedException]: " + ex.getMessage());
         }
 
         while (!this.killed) {
@@ -87,7 +88,8 @@ public class DonationsCache implements Runnable {
             try {
                 Thread.sleep(30 * 1000);
             } catch (InterruptedException ex) {
-                com.gmt2001.Console.debug.println("DonationsCache.run: Failed to execute sleep [InterruptedException]: " + ex.getMessage());
+                com.gmt2001.Console.debug.println(
+                        "DonationsCache.run: Failed to execute sleep [InterruptedException]: " + ex.getMessage());
             }
         }
     }
@@ -99,13 +101,14 @@ public class DonationsCache implements Runnable {
 
         com.gmt2001.Console.debug.println("DonationsCache::updateCache");
 
-        jsonResult = TwitchAlertsAPIv1.instance().GetDonations(lastId);
+        jsonResult = StreamLabsAPIv2.instance().GetDonations(lastId);
 
         if (jsonResult.getBoolean("_success")) {
             if (jsonResult.getInt("_http") == 200) {
                 donations = jsonResult.getJSONArray("data");
             } else if (jsonResult.optString("message", "").contains("Unauthorized")) {
-                com.gmt2001.Console.err.println("DonationsCache.updateCache: Bad API key disabling the StreamLabs module.");
+                com.gmt2001.Console.err
+                        .println("DonationsCache.updateCache: Bad API key disabling the StreamLabs module.");
                 PhantomBot.instance().getDataStore().SetString("modules", "", "./handlers/donationHandler.js", "false");
                 this.kill();
             }
@@ -116,7 +119,8 @@ public class DonationsCache implements Runnable {
                 int donationId = Integer.parseInt(donations.getJSONObject(i).get("donation_id").toString());
                 if (donationId > lastId) {
                     lastId = donationId;
-                    if (!PhantomBot.instance().getDataStore().exists("donations", donations.getJSONObject(i).get("donation_id").toString())) {
+                    if (!PhantomBot.instance().getDataStore().exists("donations",
+                            donations.getJSONObject(i).get("donation_id").toString())) {
                         EventBus.instance().postAsync(new StreamLabsDonationEvent(donations.getJSONObject(i)));
                     }
                 }
